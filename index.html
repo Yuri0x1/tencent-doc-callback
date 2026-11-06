@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>授权回调</title>
+    <style>
+        body {
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f5f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 32px 28px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 { font-size: 20px; margin: 0 0 12px; color: #1a1a1a; }
+        p { font-size: 14px; color: #666; line-height: 1.6; margin: 0 0 24px; }
+        .btn {
+            display: inline-block;
+            background: #6750a4;
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 14px 32px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:active { opacity: 0.85; }
+        .error { color: #d32f2f; }
+        .code-box {
+            word-break: break-all;
+            background: #f0f0f3;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            color: #555;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 id="title">授权成功</h1>
+        <p id="desc">点击下方按钮返回应用，完成授权。</p>
+        <button class="btn" id="backBtn" onclick="goBack()">返回应用</button>
+        <div class="code-box" id="codeBox" style="display:none;"></div>
+    </div>
+
+    <script>
+        // 从 URL 中解析 code 和 error 参数
+        var params = new URLSearchParams(window.location.search);
+        var code = params.get('code');
+        var error = params.get('error');
+        var state = params.get('state');
+
+        // 目标 deep link：跳回 App
+        var DEEP_LINK = 'tableautosender://oauth/callback';
+
+        function goBack() {
+            if (code) {
+                window.location.href = DEEP_LINK + '?code=' + encodeURIComponent(code);
+            } else if (error) {
+                window.location.href = DEEP_LINK + '?error=' + encodeURIComponent(error);
+            }
+        }
+
+        // 页面加载后自动尝试跳转（方式1，可能被浏览器拦截）
+        if (error) {
+            document.getElementById('title').innerText = '授权失败';
+            document.getElementById('title').className = 'error';
+            document.getElementById('desc').innerText = '授权被取消或出错：' + error;
+            setTimeout(function() { goBack(); }, 800);
+        } else if (code) {
+            // 自动跳转尝试
+            setTimeout(function() { goBack(); }, 800);
+        } else {
+            document.getElementById('title').innerText = '未收到授权码';
+            document.getElementById('desc').innerText = '当前页面没有携带 code 参数，请重新发起授权。';
+            document.getElementById('backBtn').style.display = 'none';
+        }
+
+        // 兜底：显示 code 供手动复制
+        if (code) {
+            var box = document.getElementById('codeBox');
+            box.style.display = 'block';
+            box.innerText = '授权码：' + code;
+        }
+    </script>
+</body>
+</html>
